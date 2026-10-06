@@ -1,0 +1,53 @@
+#cloud-config
+autoinstall:
+  version: 1
+  user-data:
+    users: [""]
+    disable_root: false
+  ssh:
+    install-server: no
+  identity:
+    username: helios
+    hostname: "BLNBL-SERIAL_NUMBER"
+    password: "$6$xlyoTXKyYtKvwfxH$kIen0CmIM/kVd2jaymUx3g2QSNtUB4rSiJDu9k5WEZURSshfm4tQd2IclVTzDZHuiUeaJcQfyKhkMGqLh.5VO1"
+  storage:
+    layout:
+      name: direct
+  partitions:
+    - name: primary
+      number: 1
+      size: 100%
+      type: ext4
+      wipe: superblock
+  preserve_layout: false
+  overwrite: true
+  filesystem:
+    - device: /dev/disk/by-id/*
+      format: ext4
+      label: ubuntu
+  keyboard:
+    layout: us
+  locale: en_US
+  timezone: "Europe/Berlin"
+  updates: security
+  shutdown: reboot
+  packages: [] 
+  snaps: [] 
+  late-commands:
+    # Install Intune 
+    - curtin in-target --target=/target -- apt-get update
+    - curtin in-target --target=/target -- apt-get install -y intune-portal
+
+    # Remove LibreOffice 
+    - curtin in-target --target=/target -- apt-get purge -y 'libreoffice*'
+    - curtin in-target --target=/target -- snap remove --purge libreoffice || true
+
+    # Remove Thunderbird 
+    - curtin in-target --target=/target -- apt-get purge -y 'thunderbird*'
+
+    # Remove Firefox
+    - curtin in-target --target=/target -- snap remove firefox
+
+    # Clean up
+    - curtin in-target --target=/target -- apt-get autoremove -y
+    - curtin in-target --target=/target -- apt-get clean
